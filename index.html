@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Anu's Kitchen | Online Orders</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="hero">
+      <nav class="nav container">
+        <div class="brand">Anu's Kitchen</div>
+        <div class="nav-links">
+          <a href="#menu">Menu</a>
+          <a href="#order">Order Online</a>
+          <a href="#customers">Customers</a>
+        </div>
+      </nav>
+
+      <div class="container hero-content">
+        <div class="hero-copy">
+          <p class="eyebrow">5-star home dining • online orders</p>
+          <h1>Fine flavors from a warm home kitchen.</h1>
+          <p class="hero-text">
+            Anu runs this cozy restaurant from home, bringing elegant dishes and
+            heartfelt hospitality straight to your table with a smooth online ordering experience.
+          </p>
+          <div class="hero-actions">
+            <a class="button primary" href="#order">Place an order</a>
+            <button class="button secondary" id="menu-popup-btn" type="button">View menu prices</button>
+          </div>
+        </div>
+        <div class="hero-media">
+          <img
+            class="hero-image"
+            src="https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=900&q=80"
+            alt="Elegant restaurant dining room"
+          />
+          <div class="hero-card">
+            <h3>Today’s highlights</h3>
+            <ul>
+              <li>Signature grilled salmon</li>
+              <li>Chef’s pasta special</li>
+              <li>Fresh garden salad</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <div id="menu-modal" class="modal" aria-hidden="true">
+      <div class="modal-content">
+        <button class="modal-close" id="menu-modal-close" type="button">×</button>
+        <h3>Anu's Kitchen Menu</h3>
+        <ul id="menu-modal-list" class="modal-list"></ul>
+      </div>
+    </div>
+
+    <main>
+      <section id="menu" class="section container">
+        <div class="section-heading">
+          <p class="eyebrow">Our menu</p>
+          <h2>Popular dishes for hungry guests</h2>
+        </div>
+        <div id="menu-grid" class="menu-grid"></div>
+      </section>
+
+      <section id="order" class="section container">
+        <div class="section-heading">
+          <p class="eyebrow">Order form</p>
+          <h2>Create a customer order</h2>
+        </div>
+        <div class="order-layout">
+          <form id="order-form" class="card form-card">
+            <label>
+              Customer name
+              <input type="text" id="customerName" required />
+            </label>
+            <label>
+              Phone number
+              <input type="tel" id="phone" required />
+            </label>
+            <label>
+              Delivery address
+              <input type="text" id="address" required />
+            </label>
+            <label>
+              Dish
+              <select id="dish" required></select>
+            </label>
+            <label>
+              Quantity
+              <input type="number" id="quantity" min="1" value="1" required />
+            </label>
+            <label>
+              Notes
+              <textarea id="notes" rows="3" placeholder="No onions, extra sauce..."></textarea>
+            </label>
+            <button class="button primary" type="submit">Submit order</button>
+          </form>
+
+          <div class="card summary-card">
+            <h3>Live order summary</h3>
+            <div class="stats">
+              <div>
+                <strong id="order-count">0</strong>
+                <span>Orders</span>
+              </div>
+              <div>
+                <strong id="customer-count">0</strong>
+                <span>Customers</span>
+              </div>
+            </div>
+            <div class="active-customers">
+              <strong id="active-customer-count">0</strong>
+              <span>Active customers on site</span>
+            </div>
+            <p id="status-message" class="status-message">Ready to take the next order.</p>
+          </div>
+        </div>
+      </section>
+
+      <section id="customers" class="section container">
+        <div class="section-heading">
+          <p class="eyebrow">Customer management</p>
+          <h2>Recent orders and guest activity</h2>
+        </div>
+        <div id="orders-list" class="orders-list"></div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <div class="container footer-content">
+        <div class="owner-details">
+          <div class="owner-avatar">
+            <img src="owner-avatar.svg" alt="Cartoon owner illustration" />
+          </div>
+          <div>
+            <h3>Owner Details</h3>
+            <p><strong>Name:</strong> Anuradha Aurchi</p>
+            <p><strong>Phone:</strong> +91 98765 43210</p>
+            <p><strong>Email:</strong> anu.kitchen@example.com</p>
+            <p><strong>Address:</strong> Deepbhoomi Residency, Chandkheda, Ahmedabad</p>
+          </div>
+        </div>
+        <div class="footer-note">
+          <p>Serving fresh, fast, and flavorful meals from home.</p>
+          <div class="qr-box">
+            <p><strong>Scan for location</strong></p>
+            <input id="qr-label" type="text" value="Scan for location" />
+            <input id="qr-link" type="text" value="https://www.google.com/maps/search/Deepbhoomi+Residency,+Chandkheda,+Ahmedabad" />
+            <img id="qr-image" src="https://api.qrserver.com/v1/create-qr-code/?size=140x140&data=https://www.google.com/maps/search/Deepbhoomi+Residency,+Chandkheda,+Ahmedabad" alt="QR code for restaurant location" />
+          </div>
+        </div>
+      </div>
+    </footer>
+
+    <script src="script.js"></script>
+  </body>
+</html>
