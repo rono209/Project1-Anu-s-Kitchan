@@ -7,8 +7,7 @@ const menuItems = [
   { name: 'Chicken Shawarma Wrap', price: 11.0, description: 'Spiced chicken wrap with crunchy salad.', image: 'https://images.unsplash.com/photo-1529006557810-274b9b2fc783?auto=format&fit=crop&w=800&q=80' }
 ];
 
-const storageKey = 'harbor-bistro-orders';
-let orders = JSON.parse(localStorage.getItem(storageKey) || '[]');
+let orders = [];
 
 const dishSelect = document.getElementById('dish');
 const menuGrid = document.getElementById('menu-grid');
@@ -21,10 +20,18 @@ const menuModalList = document.getElementById('menu-modal-list');
 const qrLabelInput = document.getElementById('qr-label');
 const qrLinkInput = document.getElementById('qr-link');
 const qrImage = document.getElementById('qr-image');
+const favoriteDishPhotoInput = document.getElementById('favoriteDishPhoto');
+const favoriteDishPhotoPreview = document.getElementById('favoriteDishPhotoPreview');
+const favoritePhotoBtn = document.getElementById('favorite-photo-btn');
+const favoriteModal = document.getElementById('favorite-modal');
+const favoriteModalClose = document.getElementById('favorite-modal-close');
+const favoritePhotoSubmit = document.getElementById('favorite-photo-submit');
 const orderCountEl = document.getElementById('order-count');
 const customerCountEl = document.getElementById('customer-count');
 const activeCustomerCountEl = document.getElementById('active-customer-count');
 const statusMessageEl = document.getElementById('status-message');
+
+let favoriteDishPhotoData = '';
 
 function renderMenu() {
   menuGrid.innerHTML = '';
@@ -75,6 +82,7 @@ function renderOrders() {
             <div>${order.dish} × ${order.quantity}</div>
             <div>${order.address}</div>
             <small>${order.notes || 'No special instructions'}</small>
+            ${order.favoriteDishPhoto ? `<img class="order-photo" src="${order.favoriteDishPhoto}" alt="Favorite dish photo for ${order.customerName}" />` : ''}
           </div>
           <button data-id="${order.id}">Remove</button>
         </div>
@@ -83,24 +91,96 @@ function renderOrders() {
     .join('');
 }
 
-orderForm.addEventListener('submit', (event) => {
+async function loadOrders() {
+  try {
+    const response = await fetch('/api/orders');
+    if (!response.ok) {
+      throw new Error('Failed to fetch orders');
+    }
+    orders = await response.json();
+    renderOrders();
+  } catch (error) {
+    console.error(error);
+    statusMessageEl.textContent = 'Unable to load orders. Check server connection.';
+  }
+}
+
+async function postOrder(order) {
+  try {
+    const response = await fetch('/api/orders', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(order)
+    });
+
+    if (!response.ok) {
+      const data = await response.json();
+      throw new Error(data.error || 'Unable to save order');
+    }
+
+    const savedOrder = await response.json();
+    orders.unshift(savedOrder);
+    renderOrders();
+    statusMessageEl.textContent = 'Order submitted successfully.';
+  } catch (error) {
+    console.error(error);
+    statusMessageEl.textContent = 'Failed to submit order. Please try again.';
+  }
+}
+
+async function deleteOrder(id) {
+  try {
+    const response = await fetch(`/api/orders/${id}`, { method: 'DELETE' });
+    if (!response.ok && response.status !== 204) {
+      throw new Error('Failed to delete order');
+    }
+    orders = orders.filter((order) => order.id !== id);
+    renderOrders();
+  } catch (error) {
+    console.error(error);
+    statusMessageEl.textContent = 'Unable to remove order. Please refresh.';
+  }
+}
+
+favoriteDishPhotoInput.addEventListener('change', () => {
+  const file = favoriteDishPhotoInput.files?.[0];
+  if (!file) {
+    favoriteDishPhotoPreview.src = '';
+    favoriteDishPhotoPreview.style.display = 'none';
+    favoriteDishPhotoData = '';
+    return;
+  }
+
+  const reader = new FileReader();
+  reader.onload = () => {
+    favoriteDishPhotoData = reader.result;
+    favoriteDishPhotoPreview.src = favoriteDishPhotoData;
+    favoriteDishPhotoPreview.style.display = 'block';
+  };
+  reader.readAsDataURL(file);
+});
+
+orderForm.addEventListener('submit', async (event) => {
   event.preventDefault();
 
   const order = {
-    id: Date.now().toString(),
     customerName: document.getElementById('customerName').value.trim(),
     phone: document.getElementById('phone').value.trim(),
     address: document.getElementById('address').value.trim(),
     dish: dishSelect.value,
     quantity: Number(document.getElementById('quantity').value),
-    notes: document.getElementById('notes').value.trim()
+    notes: document.getElementById('notes').value.trim(),
+    favoriteDishPhoto: favoriteDishPhotoData
   };
 
-  orders.unshift(order);
-  localStorage.setItem(storageKey, JSON.stringify(orders));
+  await postOrder(order);
   orderForm.reset();
+  favoriteDishPhotoPreview.src = '';
+  favoriteDishPhotoPreview.style.display = 'none';
+  favoriteDishPhotoData = '';
   document.getElementById('quantity').value = '1';
-  renderOrders();
 });
 
 ordersList.addEventListener('click', (event) => {
@@ -108,26 +188,42 @@ ordersList.addEventListener('click', (event) => {
   if (!button) return;
 
   const id = button.getAttribute('data-id');
-  orders = orders.filter((order) => order.id !== id);
-  localStorage.setItem(storageKey, JSON.stringify(orders));
-  renderOrders();
+  deleteOrder(id);
 });
 
-menuPopupBtn.addEventListener('click', () => {
-  menuModal.classList.add('open');
-  menuModal.setAttribute('aria-hidden', 'false');
-});
+menuPopupBtn.addEventListener('click', () => openModal(menuModal));
+favoritePhotoBtn.addEventListener('click', () => openModal(favoriteModal));
 
-menuModalClose.addEventListener('click', closeModal);
+menuModalClose.addEventListener('click', () => closeModal(menuModal));
+favoriteModalClose.addEventListener('click', () => closeModal(favoriteModal));
 menuModal.addEventListener('click', (event) => {
   if (event.target === menuModal) {
-    closeModal();
+    closeModal(menuModal);
+  }
+});
+favoriteModal.addEventListener('click', (event) => {
+  if (event.target === favoriteModal) {
+    closeModal(favoriteModal);
   }
 });
 
-function closeModal() {
-  menuModal.classList.remove('open');
-  menuModal.setAttribute('aria-hidden', 'true');
+favoritePhotoSubmit.addEventListener('click', () => {
+  if (!favoriteDishPhotoData) {
+    statusMessageEl.textContent = 'Please select a photo before saving.';
+    return;
+  }
+  statusMessageEl.textContent = 'Favorite photo saved and ready for order.';
+  closeModal(favoriteModal);
+});
+
+function openModal(modal) {
+  modal.classList.add('open');
+  modal.setAttribute('aria-hidden', 'false');
+}
+
+function closeModal(modal) {
+  modal.classList.remove('open');
+  modal.setAttribute('aria-hidden', 'true');
 }
 
 function updateQrCode() {
@@ -142,5 +238,5 @@ qrLabelInput.addEventListener('input', updateQrCode);
 qrLinkInput.addEventListener('input', updateQrCode);
 
 renderMenu();
-renderOrders();
+loadOrders();
 updateQrCode();
